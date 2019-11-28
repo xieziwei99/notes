@@ -97,20 +97,58 @@ public static <K, V extends Comparable<V>> K[] getKeys(Map<K, V> map, V value) {
 
 
 
+### HashMap 的方法
+
+#### merge
+
+```java
+HashMap<Integer, Integer> ret = new HashMap<>();
+int i = 2;
+// 有3个参数，param1：键key，param2：新值value，param3：lambda函数
+// 如果ret中不存在i，则将新值1关联给i，若存在i，则将旧值与新值计算后关联给i
+ret.merge(i, 1, (oldV, newV) -> oldV + newV);
+
+ret.merge(i, 1, Integer::sum);	// 与上面等价
+```
+
+
+
+### Arrays 方法
+
+#### Arrays.toString()
+
+```java
+// 输出数组a
+System.out.println(Arrays.toString(a));
+```
+
+
+
 ## springboot
 
-- cloud toolkit 插件，重启 springboot 应用脚本：
+### cloud toolkit 插件，重启 springboot 应用脚本：
 
-  ```sh
-  source /etc/profile
-  killall java
-  
-  rm /etc/init.d/wemeet
-  
-  ln -s /home/wemeet/wemeet-0.0.1-SNAPSHOT.jar /etc/init.d/wemeet
-  chmod 755 /etc/init.d/wemeet
-  service wemeet start
-  ```
+```sh
+source /etc/profile
+killall java
 
-  
+rm /etc/init.d/wemeet
+
+ln -s /home/wemeet/wemeet-0.0.1-SNAPSHOT.jar /etc/init.d/wemeet
+chmod 755 /etc/init.d/wemeet
+service wemeet start
+```
+
+
+### application.properties 文件
+
+#### 设置 MySQL 数据库
+
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/test?serverTimezone=UTC
+spring.datasource.username=xzw
+spring.datasource.password=12345678
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.jpa.properties.hibernate.hbm2ddl.auto=update
+```
 
