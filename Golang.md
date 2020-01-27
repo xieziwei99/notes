@@ -1,9 +1,44 @@
+[TOC]
+
 ## 安装
 
 - 官网下载
 - 需要 GOPATH 环境变量（用户 or 全局），其值为 go 的 workspace
 
 ## 基础语法
+
+### 除号
+
+- 与 C 语言的除号相同
+
+### 交换两个数
+
+- ```go
+  left, right = right, left
+  fmt.Println(left, right)
+  ```
+
+### Switch
+
+- Go里面`switch`默认相当于每个`case`最后带有`break`，匹配成功后不会自动向下执行其他case，而是跳出整个`switch`, 但是可以使用`fallthrough`强制执行后面的case代码。
+
+### []byte & string 互转
+
+```go
+[]byte("Hello web go")
+
+string(page2.Body)	// page2.Body为[]byte
+```
+
+### int 与 string 互转
+
+``` go
+intV, _ := strconv.Atoi("12")
+fmt.Println(intV)
+fmt.Println(strconv.Itoa(intV))
+```
+
+### 总览
 
 ```go
 package main
@@ -86,6 +121,8 @@ func main() {
 ```
 
 ## 进阶语法
+
+### 总览
 
 ```go
 package main
@@ -206,4 +243,397 @@ func main() {
 	fmt.Println()
 }
 ```
+
+
+
+## 方法
+
+### 为结构体定义方法
+
+- 接收者的类型定义和方法声明必须在同一包内；
+- 不能为内建类型声明方法。
+
+```go
+package main
+// import 。。。
+
+type Point struct {
+	x, y float64
+}
+
+// 相当于toString()，实现Stringer接口
+func (p Point) String() string {
+	return fmt.Sprintf("Point(%v, %v)", p.x, p.y)
+}
+
+// 表示为结构体Point的方法
+func (p Point) abs() float64 {
+	return math.Sqrt(p.x*p.x + p.y*p.y)
+}
+
+// 指针接收者，可以改变调用者p的字段值
+func (p *Point) plus(a float64) {
+	p.x += a
+	p.y += a
+}
+
+func main() {
+	p := Point{3, 4}
+	p.plus(10)	// 等价于(&p).plus(10)
+	fmt.Println(p.abs())
+}
+```
+
+### 接口
+
+```go
+package main
+import "fmt"
+
+type Speaker interface {
+	say()
+}
+
+type Cat struct {
+	name string
+	age int
+}
+
+// 表示Cat类型实现了接口Speaker，但我们无需显式声明此事。
+func (c Cat) say() {
+	fmt.Printf("My name is %v, I came from the Cat family and I'm %v years old\n", c.name, c.age)
+}
+
+type Dog struct {
+	name string
+	age int
+}
+
+func (d *Dog)say() {
+	fmt.Printf("My name is %v, I came from the Dog family, and I'm %v years old\n", d.name, d.age)
+}
+
+// 空接口，可接受未知类型的参数
+func sayHello(s interface{}) {
+	fmt.Printf("(%v, %T)\n", s, s)
+}
+
+func main() {
+	cat := Cat{"Kitty", 18}
+	dog := Dog{"doge", 19}
+
+	var speaker Speaker
+	speaker = cat
+	speaker.say()
+
+	speaker = &dog
+	speaker.say()
+
+	sayHello(12)
+	sayHello(12.12)
+	sayHello("12")
+}
+```
+
+### 类型断言和类型选择
+
+```go
+// 类型选择
+func do(i interface{}) {
+	switch v := i.(type) {
+	case int:
+		fmt.Println("I am a Integer", v)
+	case string:
+		fmt.Println("I am a String", v)
+	default:
+		fmt.Printf("I don't konw what this type %T means\n", v)
+	}
+}
+
+func main() {
+	var i interface{} = "hello"
+	s := i.(string)		// 类型断言
+	fmt.Println(s)
+
+	s2, ok := i.(string)
+	fmt.Println(s2, ok)
+
+	integer2, ok := i.(int)		// not panic
+	fmt.Println(integer2, ok)
+
+	//integer := i.(int)	// panic
+	//fmt.Println(integer)
+
+	do(12)
+	do("12")
+	do(12.12)
+}
+```
+
+### error 接口
+
+```go
+package main
+
+import (
+	"fmt"
+	"strconv"
+)
+
+// 自定义错误类型
+type MyError struct {
+	code int
+	desc string
+}
+
+func (e MyError) Error() string {
+	return fmt.Sprintf("{\n\t错误码: %v,\n\t描述: %v\n}", e.code, e.desc)
+}
+
+func throwError() error {
+	return MyError{code: 404, desc: "not found",}
+}
+
+func main() {
+	num, err := strconv.Atoi("1i2")
+	if err != nil {
+		fmt.Println("转换失败", err)
+	} else {
+		fmt.Printf("(%v: %T)", num, num)
+	}
+
+	err = throwError()
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+```
+
+```go
+package main
+
+import (
+	"fmt"
+)
+
+func Sqrt(x float64) (float64, error) {
+	if x >= 0 {
+		return x, nil
+	} else {
+        // 将x转为ErrNegativeSqrt类型，它是error类型，输出时会调用x.Error()
+		return 0, ErrNegativeSqrt(x)
+	}
+}
+
+type ErrNegativeSqrt float64
+
+// 实现Error()接口，即相当于ErrNegativeSqrt是error类型，
+// e作为值接受者，即e.Error()
+func (e ErrNegativeSqrt) Error() string {
+	return fmt.Sprintf("cannot Sqrt negative number: %v", float64(e))	// 需要转换为float64
+    												// 不然会递归调用e.Error()，最后内存溢出
+}
+
+func main() {
+	fmt.Println(Sqrt(2))
+	fmt.Println(Sqrt(-2))
+}
+```
+
+### Reader 接口
+
+#### strings.reader
+
+```go
+package main
+
+import ("fmt" "io" "strings")
+
+func main() {
+	reader := strings.NewReader("Hello reader!!!")
+	buf := make([]byte, 8)
+	for {
+		n, err := reader.Read(buf)
+		fmt.Printf("n=%v, err=%v, buf=%c, buf[:n]=%q\n", n, err, buf, buf[:n])
+		if err == io.EOF {
+			break
+		}
+	}
+}
+```
+
+## 并发
+
+### goroutine & channel
+
+```go
+package main
+
+import "fmt"
+
+func sum(s []int, channel chan int) {
+	sum := 0
+	for _, v := range s {
+		sum += v
+	}
+	channel <- sum
+}
+
+func main() {
+	s := []int{7, 2, 8, -9, 4, 0}
+	channel := make(chan int)
+	go sum(s[:len(s)/2], channel)
+	go sum(s[len(s)/2:], channel)
+	x := <-channel
+	y := <-channel
+	fmt.Println(y, x, y+x)
+}
+```
+
+### 等价二叉查找树
+
+```go
+package learningdemo
+
+import "math/rand"
+
+/**
+ *@author xieziwei99
+ *2020-01-19
+ */
+
+type Tree struct {
+	left *Tree
+	value int
+	right * Tree
+}
+
+func New(k int) *Tree {
+	var t *Tree
+	for _, v := range rand.Perm(10) {
+		t = insert(t, (1+v)*k)
+	}
+	return t
+}
+
+func insert(t *Tree, v int) *Tree {
+	if t == nil {
+		return &Tree{nil, v, nil}
+	}
+	if v < t.value {
+		t.left = insert(t.left, v)
+	} else {
+		t.right = insert(t.right, v)
+	}
+	return t
+}
+
+// 大写才可以被其他的包访问
+func Walk(t *Tree, ch chan int)  {
+	sendValue(t, ch)
+	close(ch)
+}
+
+func sendValue(t *Tree, ch chan int) {
+	if t != nil {
+		sendValue(t.left, ch)
+		ch <- t.value
+		sendValue(t.right, ch)
+	}
+}
+
+func Same(t1, t2 *Tree) bool {
+	ch1, ch2 := make(chan int), make(chan int)
+	go Walk(t1, ch1)
+	go Walk(t2, ch2)
+	for v1 := range ch1 {
+		if v1 != <-ch2 {
+			return false
+		}
+	}
+	return true
+}
+```
+
+### sync.Mutex
+
+```go
+package main
+
+// import ...
+
+type SafeCount struct {
+	v     int
+	mutex sync.Mutex
+}
+
+func (sc *SafeCount) addOne() {
+	sc.mutex.Lock()
+	sc.v++
+	sc.mutex.Unlock()
+}
+
+func (sc *SafeCount) getV() int {
+	sc.mutex.Lock()
+	defer sc.mutex.Unlock()	// 函数退出后解锁
+	return sc.v
+}
+
+func main() {
+	safeCount := SafeCount{v: 0,}
+	for i := 0; i < 1000; i++ {
+	    go safeCount.addOne()
+	}
+	time.Sleep(time.Second)
+	fmt.Println(safeCount.getV())
+}
+```
+
+## Web
+
+### 简单的 HelloWorld
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+	"net/http"
+)
+
+func sayHello(w http.ResponseWriter, r *http.Request)  {
+	_ = r.ParseForm()
+	fmt.Println(r.Form)
+	fmt.Println(r.URL.Path)
+	fmt.Println(r.Form["param1"])
+	for k, v := range r.Form {
+		fmt.Printf("(%v=%v)\n", k, v)
+	}
+	_, _ = fmt.Fprintln(w, "Hello Go!!!")
+}
+
+// 运行此单个文件即可，相当简单
+func main() {
+	http.HandleFunc("/", sayHello)
+	err := http.ListenAndServe(":9090", nil)
+	if err != nil {
+		log.Fatal("ListenAndServe:", err)
+	}
+}
+```
+
+### 相关方法
+
+#### r *http.Request
+
+##### r.FormValue
+
+```go
+// 返回第一个名叫body的组件的内容，类型为字符串
+body := r.FormValue("body")
+```
+
+
+
 

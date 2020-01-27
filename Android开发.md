@@ -6,6 +6,74 @@
 2. 对于按钮，一般要求宽和高不低于 48 dp
 3. 用单位 sp 来指定字体大小
 
+### 基本组件
+
+#### 普通文本框
+
+- TextView
+
+#### 系统弹窗
+
+- 普通弹窗
+
+  ```java
+  // 精简版
+  public void showNormalDialog(View view) {
+      new AlertDialog.Builder(this)
+          .setTitle("标题")
+          .setMessage("这是message")
+          .create()
+          .show();
+  }
+  
+  // 较丰富版
+  public void showNormalDialog(View view) {
+      new AlertDialog.Builder(this)
+          .setTitle("标题")
+          .setIcon(R.mipmap.ic_launcher)
+          .setMessage("这是message")
+          .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+              @Override
+              public void onClick(DialogInterface dialog, int which) {
+                  Toast.makeText(ShowQuestionActivity.this,
+                                 "后续信息提示", Toast.LENGTH_SHORT).show();
+                  dialog.dismiss();
+              }
+          })
+          .create()
+          .show();
+  }
+  ```
+
+  
+
+### 关于网络的错误
+
+1. 报错信息：CLEARTEXT communication to 101.37.172.100 not permitted by network security policy
+
+   - 解决方法1
+
+     - 服务器端改用 HTTPS ，而不是 HTTP
+
+   - 解决方法2
+
+     1. 添加文件 `src\main\res\xml\network_security_config.xml `
+
+        ```xml
+        <?xml version="1.0" encoding="utf-8"?>
+        <network-security-config>
+        <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">101.37.172.100</domain>
+        </domain-config>
+        </network-security-config>
+        ```
+
+     2. 修改 `AndroidManifest.xml` 文件，设置属性 `android:networkSecurityConfig ` 
+
+        ```xml
+        android:networkSecurityConfig="@xml/network_security_config"
+        ```
+
 
 
 ## Retrofit 使用
@@ -185,7 +253,8 @@
               myLocationStyle.radiusFillColor(Color.argb(0, 0, 0, 0));
               aMap.setMyLocationStyle(myLocationStyle);
               // 官网说非必须，但实际需要（实测）
-           aMap.getUiSettings().setMyLocationButtonEnabled(true);
+              aMap.getUiSettings().setMyLocationButtonEnabled(true);
+      	    aMap.getUiSettings().setScaleControlsEnabled(true);
               aMap.setMyLocationEnabled(true);
           }
       ```
@@ -204,5 +273,5 @@
    aMap.moveCamera(CameraUpdateFactory.zoomTo(18));
    ```
 
-   
+7. [标记点：官网](https://lbs.amap.com/api/android-sdk/guide/draw-on-map/draw-marker)
 
