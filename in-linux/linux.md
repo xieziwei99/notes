@@ -486,6 +486,21 @@ Plugin 'ycm-core/YouCompleteMe'
 
 # ------第4步------在对应目录下执行命令
 ./install.py --clang-completer
+
+# 试着运行
+git submodule update --init --recursive
+
+# ------可能报错1-------
+-- Downloading libclang 9.0.0 from https://dl.bintray.com/ycm-core/libclang/libclang-9.0.0-x86_64-unknown-linux-gnu.tar.bz2
+CMake Error at ycm/CMakeLists.txt:107 (file):
+  file DOWNLOAD HASH mismatch
+
+    for file: [/home/xzw/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/../clang_archives/libclang-9.0.0-x86_64-unknown-linux-gnu.tar.bz2]
+# 解决
+由于vpn的问题，文件下载不完全，先删除指定文件，再wget指定网址手动下载
+
+# ------第5步------在vimrc中配置
+不知道howto，失败了
 ```
 
 #### Vundle插件
@@ -516,6 +531,32 @@ filetype plugin indent on      "加载vim自带和插件相应的语法和文件
 
 # ------删除插件------在vim模式下运行
 :BundleClean
+```
+
+### 更改apt源为阿里云源
+
+```sh
+# ------第1步------备份/etc/apt/source.list文件
+sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
+
+# ------第2步------获取版本号，例如：stable
+lsb_release -c
+
+# ------第3步------更改source.list文件
+deb http://mirrors.aliyun.com/ubuntu/ stable main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ stable main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ stable-security main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ stable-security main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ stable-updates main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ stable-updates main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ stable-backports main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ stable-backports main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ stable-proposed main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ stable-proposed main restricted universe multiverse
+
+# ------第4步------更新
+sudo apt-get update		# 升级apt
+sudo apt-get upgrade	# 升级软件
 ```
 
 
