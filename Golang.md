@@ -4,6 +4,7 @@
 
 - 官网下载
 - 需要 GOPATH 环境变量（用户 or 全局），其值为 go 的 workspace
+- 查看版本：`go version`
 
 ## 基础语法
 
@@ -635,5 +636,22 @@ body := r.FormValue("body")
 ```
 
 
+
+## Web 框架
+
+### gin
+
+#### 安装
+
+- `go get -u github.com/gin-gonic/gin`
+- 安装 Govendor 创建项目工具：`go get github.com/kardianos/govendor`
+- 需要科学上网
+
+#### 创建项目
+
+1. `mkdir alohagin`
+2. `cd .\alohagin\`
+3. `govendor init`
+4. govendor fetch github.com/gin-gonic/gin@v1.3，在此处失败
 
 

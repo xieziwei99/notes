@@ -1,6 +1,6 @@
 [TOC]
 
-## Java
+## Java 8
 
 ### 常用写法
 
@@ -31,11 +31,14 @@ Integer[] aa1 = Arrays.stream(a).boxed().toArray(Integer[]::new);
 new ArrayList<>(Arrays.asList("tag1", "tag2", "tag3"))
 ```
 
-- new Timestamp
+- 获取当前时间戳
 
 ```java
-// 得到的不是UTC时区
+// 时间戳不分时区
 new Timestamp(new Date().getTime())
+long milli = LocalDateTime.now().toInstant(ZoneOffset.of("+8")).toEpochMilli();
+long milli = Instant.now().toEpochMilli();
+long milli = System.currentTimeMillis();
 ```
 
 - 关于 Arrays.asList()
@@ -122,9 +125,64 @@ ret.merge(i, 1, Integer::sum);	// 与上面等价
 System.out.println(Arrays.toString(a));
 ```
 
+------
+
+## Java 11
+
+1. 一个命令编译运行源代码：`java aloha.java`
+
+### 类型推断
+
+- var javastack = "javastack";  
+
+### 集合方法
+
+#### List.of() & List.copyof()
+
+```java
+var list = List.of("Java", "Python", "C");  	// 属于不可变 AbstractImmutableList 类的子类
+var copy = List.copyOf(list);  
+System.out.println(list == copy);   // true 
+
+var list = new ArrayList<String>();  	// 不属于不可变 AbstractImmutableList 类的子类
+var copy = List.copyOf(list);  
+System.out.println(list == copy);   // false 
+```
+
+### Stream方法
+
+#### takeWhile & dropWhile
+
+```
+// 从开始计算，当 n <= 3 不成立时就截止。
+Stream.of(1, 2, 3, 4, 5).takeWhile(i -> i <= 3).collect(Collectors.toList())
+$30 ==> [1, 2, 3]
+
+// 一旦 n < 3 不成立就开始计算
+Stream.of(1, 2, 3, 4, 5).dropWhile(i -> i < 3).collect(Collectors.toList());
+$31 ==> [3, 4, 5]
+```
+
+### HttpClient API
+
+```java
+public static void main(String[] args) {
+    HttpRequest request = HttpRequest.newBuilder()
+        .uri(URI.create("http://101.37.172.100:8081/api/city"))
+        .build();
+    HttpClient client = HttpClient.newHttpClient();
+    client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+        .thenApply(HttpResponse::body)
+        .thenAccept(System.out::println)
+        .join();
+}
+```
 
 
-## springboot
+
+------
+
+## SpringBoot
 
 ### cloud toolkit 插件，重启 springboot 应用脚本：
 
@@ -145,11 +203,26 @@ service wemeet start
 #### 设置 MySQL 数据库
 
 ```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/test?serverTimezone=UTC
-spring.datasource.username=xzw
-spring.datasource.password=12345678
-spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
-spring.jpa.properties.hibernate.hbm2ddl.auto=update
+### 通用设置
+    spring.datasource.url=jdbc:mysql://localhost:3306/test?serverTimezone=UTC
+    spring.datasource.username=xzw
+    spring.datasource.password=12345678
+    spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+    spring.jpa.properties.hibernate.hbm2ddl.auto=update
+    # springboot2.0 更改默认引擎为innodb，本来是MyISAM
+    spring.jpa.database-platform=org.hibernate.dialect.MySQL5InnoDBDialect
+    # 允许在更新视图的过程中进行JPA查询，默认为true，显示指出可以消除启动时的warn
+	spring.jpa.open-in-view=true
+
+spring.profiles.active=dev
+
+spring.jackson.time-zone=GMT+8
+
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+
+# 不明白
+spring.jpa.properties.hibernate.enable_lazy_load_no_trans=true
 ```
 
 
