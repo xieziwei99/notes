@@ -42,13 +42,23 @@
 
 
 
-### 查看已安装软件
+### apt命令
+
+#### 查看已安装软件
 
 - `sudo apt list --installed | grep mongodb` 
 
-### 卸载软件
+#### 卸载软件
 
 - `sudo apt remove mongodb` 
+
+#### 查看apt中是否有某个软件
+
+- sudo apt-cache search all | grep gcc
+
+#### 查看某软件安装状态
+
+sudo dpkg-query -l virtualbox-6.0
 
 
 
@@ -559,6 +569,15 @@ sudo apt-get update		# 升级apt
 sudo apt-get upgrade	# 升级软件
 ```
 
+### ufw防火墙命令
 
+```sh
+# ------安装------
+sudo apt-get install ufw
+
+sudo ufw status
+sudo ufw enable
+sudo ufw disable
+```
 
 ## 基于Centos的Linux系统

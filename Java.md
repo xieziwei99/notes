@@ -85,7 +85,13 @@ public static <K, V extends Comparable<V>> K[] getKeys(Map<K, V> map, V value) {
 翻译：若两个对象通过equals判断不相等，则这两个对象的hash值可以相等也可以不相等，但不相等可以提升哈希表的性能。
 ```
 
+------
 
+#### System.exit(-1)
+
+- 退出正在运行的应用，而且是以异常的状态退出（-1，只要非0都视为异常）
+  - 正常退出时系统提示：Process finished with exit code 0
+  - 异常退出时系统提示：Process finished with exit code -1
 
 ### Java 反射机制
 
