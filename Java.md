@@ -190,6 +190,11 @@ public static void main(String[] args) {
 
 ## SpringBoot
 
+### 概念
+
+1. 起步依赖starter
+2. 微服务时代-对比单体应用（All in one）
+
 ### cloud toolkit 插件，重启 springboot 应用脚本：
 
 ```sh
@@ -205,8 +210,6 @@ service wemeet start
 
 
 ### application.properties 文件
-
-#### 设置 MySQL 数据库
 
 ```properties
 ### 通用设置
