@@ -36,6 +36,22 @@
 
 - df -h
 
+#### 查找文件
+
+```sh
+# 在当前目录以及子目录下查找
+find | grep wordcount
+
+# 指定查找目录
+find /home/xzw/softwares/ | grep wordcount
+```
+
+#### 根据内容查找文件
+
+```sh
+find input/ | xargs grep "hello"
+```
+
 
 
 ### 设置环境变量
