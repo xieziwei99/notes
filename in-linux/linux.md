@@ -145,13 +145,25 @@ sudo dpkg-query -l virtualbox-6.0
    scp -r dir lab:
    ```
 
-### 创建用户
+### 用户管理
+
+#### 创建用户
 
 ```sh
 # ------前提------以root身份登录
 useradd -m xzw	# 执行结果：会在/home目录下生成一个xzw目录
 passwd xzw
 ```
+
+#### 更改文件所有权
+
+```sh
+sudo chown -R $USER:$USER /var/www/xzw.com/html/	# -R表示递归，$USER:$USER表示当前用户(组)
+# 更改文件权限
+sudo chmod -R 755 /var/www/xzw.com	
+```
+
+
 
 ------
 
