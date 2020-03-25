@@ -272,6 +272,34 @@ spring.jpa.properties.hibernate.enable_lazy_load_no_trans=true
 
 
 
+------
+
+## Spring
+
+### 概念
+
+#### Spring的特性
+
+1. Spring是非侵入性的
+2. 依赖注入
+3. 面向切面编程
+4. 容器：包含并管理应用对象的生命周期
+5. 一站式框架
+
+#### IOC(DI)
+
+1. IOC：控制反转
+2. DI：依赖注入
+3. IOC和DI是一回事
+
+#### AOP
+
+1. AOP：面向切面编程
+
+#### Spring模块
+
+![1585129260101](images/1585129260101.png)
+
 
 
 
