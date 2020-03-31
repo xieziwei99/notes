@@ -507,7 +507,7 @@ nnoremap <space> za
 " f5执行文件
 map <F5> :call RunPython()<CR>
 func! RunPython()
-    exec "W"
+    exec "w"
     if &filetype == 'python'
         exec "!time python3 %"
     endif
@@ -613,3 +613,19 @@ sudo ufw disable
 ```
 
 ## 基于Centos的Linux系统
+
+### yum命令
+
+1. `yum list installed python`：查看已安装的特定软件
+2. 
+
+
+
+
+
+
+
+
+
+
+
