@@ -209,6 +209,24 @@ unzip file
 rm -rf dirname
 ```
 
+#### 查看端口占用
+
+##### netstat
+
+```sh
+# 查看 tcp udp 端口占用
+netstat -tunlp | grep 端口号	# -t tcp端口 -u udp端口
+```
+
+##### lsof
+
+```sh
+# 安装
+sudo apt install lsof
+# 查看端口占用
+sudo lsof -i:80
+```
+
 
 
 ------
