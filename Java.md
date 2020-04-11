@@ -497,3 +497,41 @@ public class Car {
 
 1. 很少使用，不推荐
 
+#### bean 的作用域
+
+```xml
+<!--
+	bean 的作用域：
+		默认为 singleton：bean在初始化容器时被创建，每次请求获得同一个bean
+		prototype：bean在初始化容器时不创建，每次请求时再创建一个新的bean
+-->	
+<bean id="car2" class="com.xzw.helloworld2.Car" p:brand="Baoma" p:price="200000"/>
+<bean id="car3" class="com.xzw.helloworld2.Car" p:price="300000" p:brand="jinlin" scope="prototype"/>
+```
+
+#### 使用SpEL
+
+```xml
+<beans>
+	<!-- 使用SpEL -->
+    <bean id="address" class="com.xzw.helloworld3.Address" p:city="Beijing" p:street="WuDaoKou"/>
+    <!-- 使用SpEL引用类的静态属性 -->
+    <bean id="car" class="com.xzw.helloworld3.Car" p:brand="Audi" p:price="300000"
+          p:tyrePerimeter="#{T(java.lang.Math).PI * 20}"/>
+    <!-- 使用SpEL引用其他的bean -->
+    <!-- 使用SpEL引用其他bean的属性 -->
+    <!-- 使用SpEL三目运算符 -->
+    <bean id="person" class="com.xzw.helloworld3.Person" p:name="ZhangSan" p:car="#{car}" p:city="#{address.city}" p:info="#{car.price >= 250000 ? '金领' : '白领'}"/>
+</beans>
+```
+
+
+
+
+
+
+
+
+
+
+
