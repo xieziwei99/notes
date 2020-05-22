@@ -162,7 +162,12 @@
   }
   ```
 
+### Android 四大组件
 
+1. Activity
+2. Service
+3. BroadcastReciever
+4. ContentProvider
 
 
 ## Retrofit 使用
@@ -174,6 +179,7 @@
        implementation 'com.squareup.retrofit2:retrofit:2.7.0'
        // Retrofit库
        implementation 'com.squareup.retrofit2:converter-gson:2.7.0'
+       implementation 'com.squareup.retrofit2:converter-jackson:2.7.0'
      }
    ```
 
@@ -385,3 +391,46 @@
 
 8. 定位：[官网](https://lbs.amap.com/api/android-location-sdk/guide/android-location/getlocation)
 
+   ```java
+   aMap.moveCamera(CameraUpdateFactory.zoomTo(16));
+   // 定位
+   locationClient = new AMapLocationClient(getApplicationContext());
+   locationClient.setLocationListener(location -> {
+       if (location != null) {
+           if (location.getErrorCode() == 0) {
+               aMap.moveCamera(CameraUpdateFactory.newLatLng(
+                   new LatLng(location.getLatitude(), location.getLongitude())
+               ));
+           } else {    // 定位失败
+               Log.e("AMapError", "location Error, ErrCode:"
+                     + location.getErrorCode() + ", errInfo:"
+                     + location.getErrorInfo());
+           }
+       }
+   });
+   AMapLocationClientOption option = new AMapLocationClientOption();
+   option.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy)
+       //                .setOnceLocation(true)
+       .setInterval(2000)
+       ;
+   locationClient.setLocationOption(option);
+   locationClient.startLocation();
+   ```
+
+   直接使用 aMap.getMyLocation() 会得到 null 值，文档说
+
+   ![1587900970058](images/1587900970058.png)
+
+   那么怎么设置 locationSource 呢，没找到
+
+9. 
+
+## RxJava
+
+1. gradle 依赖
+
+   ```properties
+   compile 'io.reactivex.rxjava2:rxjava:2.2.0'
+   ```
+
+2. 

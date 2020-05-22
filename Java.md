@@ -131,6 +131,62 @@ ret.merge(i, 1, Integer::sum);	// 与上面等价
 System.out.println(Arrays.toString(a));
 ```
 
+
+
+### 文件 IO
+
+1. 文件路径允许使用 Unix 的分隔符 `/` 
+2. IO 流
+   1. 字节流：8 bit ，0 1
+      1. 适于处理图片，视频等
+      2. 抽象基类：InputStream OutputStream
+   2. 字符流：16 bit ， 'a' 'b'
+      1. 适于处理文本（不能处理**二进制**的字节流的图片）
+      2. 抽象基类：Reader Writer
+
+![1589615887928](images/1589615887928.png)
+
+#### java.io.File
+
+##### createNewFile()
+
+1. 当文件的上级路径不存在时，会抛出异常
+
+   ![1589613352227](images/1589613352227.png)
+
+```java
+// 允许使用 Unix 的分隔符 `/`
+File file = new File("javacore/src/文件IO123/hello.txt");
+boolean newFile = file.createNewFile();
+if (newFile) {
+    System.out.println("创建成功");
+} else {
+    System.out.println("文件已存在");
+}
+```
+
+#### java.io.FileWriter
+
+##### write()
+
+1. 当文件的上级路径不存在时，会抛出异常
+
+   ![1589639019858](images/1589639019858.png)
+
+```java
+public static void main(String[] args) throws IOException {
+    writeStringToFile("javacore/src/文件IO123/hello.txt", "解放军拉萨空间爱多久撒");
+}
+
+public static void writeStringToFile(String fileName, String msg) throws IOException {
+    try (FileWriter fileWriter = new FileWriter(fileName)) {
+        fileWriter.write(msg);
+    }
+}
+```
+
+
+
 ------
 
 ## Java 11
@@ -199,13 +255,13 @@ public static void main(String[] args) {
 
 ```sh
 source /etc/profile
-killall java
+/etc/init.d/weup stop
 
-rm /etc/init.d/wemeet
+rm /etc/init.d/weup
 
-ln -s /home/wemeet/wemeet-0.0.1-SNAPSHOT.jar /etc/init.d/wemeet
-chmod 755 /etc/init.d/wemeet
-service wemeet start
+ln -s /root/weup/*.jar /etc/init.d/weup
+chmod 755 /etc/init.d/weup
+service weup start
 ```
 
 
@@ -222,13 +278,12 @@ service wemeet start
     spring.jpa.database-platform=org.hibernate.dialect.MySQL5InnoDBDialect
     # 允许在更新视图的过程中进行JPA查询，默认为true，显示指出可以消除启动时的warn
 	spring.jpa.open-in-view=true
+	
+	spring.jackson.time-zone=GMT+8
+	spring.jpa.show-sql=true
+	spring.jpa.properties.hibernate.format_sql=true
 
 spring.profiles.active=dev
-
-spring.jackson.time-zone=GMT+8
-
-spring.jpa.show-sql=true
-spring.jpa.properties.hibernate.format_sql=true
 
 # 不明白
 spring.jpa.properties.hibernate.enable_lazy_load_no_trans=true
@@ -270,7 +325,17 @@ spring.jpa.properties.hibernate.enable_lazy_load_no_trans=true
 
 3. 编写 model 类，和 mapper 类，即可实现简单的 CRUD
 
+### 注解
 
+#### @JoinColumn
+
+1. 例如
+
+   ```java
+   @OneToOne
+   @JoinColumn(name = "content_id")	// 可以不填，他只决定外键字段的名字是什么，不填则采用默认的
+   private BugContent bugContent;
+   ```
 
 ------
 
@@ -525,13 +590,115 @@ public class Car {
 </beans>
 ```
 
+### 注解
+
+1. 标识组件
+
+   @Component @Service @Repository @Controller
+
+   这四个可以混用，但建议按照名字意义使用
+
+2. 注入
+
+   @Autowired @Resource @Inject
+
+   这三个类似，建议使用 @Autowired
+
+#### @Qualifier
+
+```java
+final UserRepo userRepo;
+
+// 当用 @Autowired 注入 bean 时，如果容器中有两个匹配的 bean，则会抛出异常
+// 使用 @Qualifier 注解可以指明注入哪个 bean
+public UserService(@Qualifier("userRepoImpl2") UserRepo userRepo) {
+    this.userRepo = userRepo;
+}
+```
 
 
 
+## Util
+
+### FileUtil
+
+```java
+public class FileUtil {
+
+    public static String readFileToString(File file) throws IOException {
+        StringBuilder stringBuilder = new StringBuilder();
+        try (FileReader reader = new FileReader(file);
+             BufferedReader br = new BufferedReader(reader)) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                // 一次读入一行数据
+                stringBuilder.append(line);
+            }
+        }
+        return stringBuilder.toString();
+    }
+}
+```
 
 
 
+### JacksonUtil
+
+```java
+public class JacksonUtil {
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    // 不提供构造函数
+    private JacksonUtil() {
+    }
+
+    public static ObjectMapper getInstance() {
+        return objectMapper;
+    }
+
+    /**
+     * 将对象转换成json串，也可以将list和array转换成json串
+     *
+     * @param o 对象，list or array
+     * @return json串
+     * @throws JsonProcessingException 抛出由上层处理
+     */
+    public static String otoj(Object o) throws JsonProcessingException {
+        return objectMapper.writeValueAsString(o);
+    }
+
+    /**
+     * 将 json 串转换成 pojo
+     *
+     * @param jsonStr json 串
+     * @param clazz   类的类型
+     * @param <T>     泛型
+     * @return pojo
+     * @throws IOException 抛出由上层处理
+     */
+    public static <T> T jtoo(String jsonStr, Class<T> clazz) throws IOException {
+        return objectMapper.readValue(jsonStr, clazz);
+    }
+}
+```
 
 
 
+### ReturnVO
+
+```java
+@Getter
+@Setter
+@Accessors(chain = true)
+public class ReturnVO<T> {
+    public static final int OK = 200;
+    public static final int ERROR = 500;
+
+    private Integer code;
+
+    private String message;
+
+    private T data;
+}
+```
 

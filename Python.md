@@ -224,8 +224,6 @@ def main1():
 
 
 
-
-
 ## Django
 
 ### 创建 app 基础流程
