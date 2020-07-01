@@ -635,7 +635,26 @@ sudo ufw disable
 ### yum命令
 
 1. `yum list installed python`：查看已安装的特定软件
-2. 
+
+
+
+### 系统服务
+
+1. 有用户服务和系统服务之分，目录为：/usr/lib/systemd /usr/lib/systemd/system
+
+```sh
+[Unit]
+Description=Gunicore to start tdd
+
+[Service]
+Restart=on-failure
+User=root
+WorkingDirectory=/root/tdd/sites/123.56.85.195/TDD-TodoList
+ExecStart=/root/tdd/sites/123.56.85.195/virtualenv/bin/gunicorn --bind unix:/root/tmp/123.56.85.195.socket superlists.wsgi:application
+
+[Install]
+WantedBy=multi-user.target
+```
 
 
 

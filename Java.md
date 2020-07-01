@@ -185,7 +185,124 @@ public static void writeStringToFile(String fileName, String msg) throws IOExcep
 }
 ```
 
+### 日期
 
+#### System.currentTimeMillis();
+
+#### java.util.Date
+
+```java
+public static void main(String[] args) {
+    long currentTimeMillis = System.currentTimeMillis();
+    System.out.println(currentTimeMillis);  // 1592909870652
+
+    Date date = new Date();     // 无参构造：获取当前时间
+    System.out.println(date);   // Tue Jun 23 18:58:35 GMT+08:00 2020
+
+    Date date1 = new Date(currentTimeMillis);   // 使用毫秒数作为构造器参数
+    System.out.println(date1);
+
+    long time = date.getTime();     // Date对象 -> 时间戳
+    System.out.println(time);
+}
+```
+
+#### java.sql.Date
+
+继承自 java.util.Date，与数据库中的 date 类型对应
+
+#### SimpleDateFormat
+
+```java
+class DateUtil {
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+    public static String format(Date date) {
+        return sdf.format(date);
+    }
+
+    public static Date parse(String dateStr) throws ParseException {
+        return sdf.parse(dateStr);
+    }
+}
+```
+
+#### Calendar
+
+```java
+Calendar calendar = Calendar.getInstance();
+System.out.println("当月的第几天，即几月几号的号 " + calendar.get(Calendar.DAY_OF_MONTH));
+calendar.add(Calendar.DAY_OF_MONTH, 1);
+System.out.println(calendar.getTime());
+calendar.setTime(DateUtil.parse("2020-7-27 17:55:14"));
+System.out.println(calendar.getTime());
+```
+
+#### LocalDateTime
+
+```java
+public static void main(String[] args) {
+    System.out.println(LocalDate.now());
+    System.out.println(LocalTime.now());
+    System.out.println(LocalDateTime.now());
+
+    LocalDateTime localDateTime = LocalDateTime.of(2020, 5, 7, 13, 14);
+    System.out.println(localDateTime);
+    System.out.println(localDateTime.getYear());
+    System.out.println(localDateTime.getMonth());
+    System.out.println(localDateTime.getDayOfMonth());
+    System.out.println(localDateTime.getDayOfWeek());
+
+    LocalDateTime localDateTime1 = localDateTime.withHour(5).withMinute(20);
+    System.out.println(localDateTime);
+    System.out.println(localDateTime1);
+
+    localDateTime1 = localDateTime.plusSeconds(12);
+    System.out.println(localDateTime1);
+    localDateTime1 = localDateTime.minusSeconds(-10);
+    System.out.println(localDateTime1);
+}
+```
+
+#### Instant
+
+```java
+Instant instant = Instant.now();    // 比北京时间慢8小时
+System.out.println(instant);
+System.out.println(instant.toEpochMilli());
+System.out.println(instant.getEpochSecond());
+
+OffsetDateTime offsetDateTime = instant.atOffset(ZoneOffset.ofHours(8));
+System.out.println(offsetDateTime);
+System.out.println(offsetDateTime.toInstant());		// 和上面获得的 instant 一样
+```
+
+#### DateTimeFormatter
+
+```java
+class LocalDateUtil {
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    public static String format(LocalDateTime localDateTime) {
+        return formatter.format(localDateTime);
+    }
+
+    public static LocalDateTime parse(String dateStr) {
+        return LocalDateTime.parse(dateStr, formatter);
+    }
+
+    public static long strToMilli(String dateStr) {
+        LocalDateTime localDateTime = LocalDateTime.parse(dateStr, formatter);
+        return localDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+    }
+
+    public static String milliToStr(long milli) {
+        Instant instant = Instant.ofEpochMilli(milli);
+        LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+        return format(localDateTime);
+    }
+}
+```
 
 ------
 
@@ -248,8 +365,15 @@ public static void main(String[] args) {
 
 ### 概念
 
-1. 起步依赖starter
 2. 微服务时代-对比单体应用（All in one）
+
+#### 优点
+
+1. 快速
+2. 内嵌 Servlet 容器
+3. 起步依赖 starter
+4. 大量的自动配置（也有缺点）
+5. 没有代码生成
 
 ### cloud toolkit 插件，重启 springboot 应用脚本：
 
@@ -287,6 +411,12 @@ spring.profiles.active=dev
 
 # 不明白
 spring.jpa.properties.hibernate.enable_lazy_load_no_trans=true
+
+# thymeleaf 缓存
+spring.thymeleaf.cache=false
+
+# 国际化，多语言
+spring.messages.basename=static.multi_language.login
 ```
 
 
@@ -335,6 +465,268 @@ spring.jpa.properties.hibernate.enable_lazy_load_no_trans=true
    @OneToOne
    @JoinColumn(name = "content_id")	// 可以不填，他只决定外键字段的名字是什么，不填则采用默认的
    private BugContent bugContent;
+   ```
+
+#### @ConfigurationProperties
+
+给 javaBean 注入配置文件中的属性值
+
+#### @Value
+
+给属性注入配置文件中的值
+
+#### @PropertySource
+
+加载指定的配置文件，只对 properties 文件生效
+
+#### @ImportSource
+
+1. （不常用）导入 Spring 的配置文件，使其生效
+2. 推荐使用 @Bean 来配置组件
+
+#### @Bean
+
+1. 为 IOC 容器中加入组件，例如
+
+   ```java
+   @Configuration
+   public class MyConfiguration {
+   
+       /*
+       方法名，即作为 bean 的 name
+        */
+       @Bean
+       public Person person111() {
+           Person person = new Person();
+           System.out.println(person);
+           person.setLastName("Jack");
+           return person;
+       }
+   }
+   ```
+
+#### @Configuration
+
+标明一个类是配置类，就相当于 Spring 中的一个配置文件
+
+### 自动配置
+
+#### 指定激活配置文件
+
+```sh
+--spring.profiles.active=dev
+```
+
+#### [可用配置](https://www.springcloud.cc/spring-boot.html#common-application-properties)
+
+
+
+### Web 开发
+
+#### Thymeleaf
+
+```xml
+xmlns:th="http://www.thymeleaf.org"
+```
+
+1. 设置缓存为 false
+
+   ```properties
+   spring.thymeleaf.cache=false
+   ```
+
+2. 
+
+#### 配置国际化
+
+1. 编写国际化语言文件
+
+   ![image-20200620171014264](images/image-20200620171014264.png)
+
+   ```properties
+   # login.properties
+   login.button_login=登录
+   login.password=密码
+   login.title=首页
+   login.username=用户名
+   
+   # login_zh_CN.properties
+   login.button_login=登录
+   login.password=密码
+   login.title=首页
+   login.username=用户名
+   
+   # login_en_US.properties
+   login.button_login=Login
+   login.password=Password
+   login.title=Home
+   login.username=User Name
+   ```
+
+2. 编写配置
+
+   ```properties
+   # application.properties
+   spring.messages.basename=static.multi_language.login
+   ```
+
+3. 在 html 中使用
+
+   使用 Thymeleaf 中的 #{...} 和 @{...}
+
+   ```html
+   <!DOCTYPE html>
+   <html lang="zh" xmlns:th="http://www.thymeleaf.org">
+   <head>
+       <meta charset="UTF-8">
+       <title th:text="#{login.title}">首页</title>
+   </head>
+   <body>
+   <div>
+       <form action="/" method="post">
+           <div>
+               <label for="username" th:text="#{login.username}">用户名</label>
+               <input id="username" name="username" type="text">
+           </div>
+           <div>
+               <label for="password" th:text="#{login.password}">密码</label>
+               <input id="password" name="password" type="password">
+           </div>
+           <button th:text="#{login.button_login}">登录</button>
+       </form>
+   </div>
+   <div>
+       <a th:href="@{/login(l='zh_CN')}">中文</a>
+       <a th:href="@{/login(l='en_US')}">English</a>
+   </div>
+   </body>
+   </html>
+   ```
+
+4. 编写 LocaleResolver 组件，处理逻辑
+
+   ```java
+   public class MyLocaleResolver implements LocaleResolver {
+   
+       @Override
+       public Locale resolveLocale(HttpServletRequest request) {
+           String l = request.getParameter("l");
+           Locale locale = Locale.getDefault();
+           if (!l.isEmpty()) {
+               String[] split = l.split("_");
+               locale = new Locale(split[0], split[1]);
+           }
+           return locale;
+       }
+   
+       @Override
+       public void setLocale(HttpServletRequest request, HttpServletResponse response, Locale locale) {
+   
+       }
+   }
+   ```
+
+5. 添加组件
+
+   ```java
+   @Configuration
+   public class MyMvcConfig implements WebMvcConfigurer {
+   
+       @Bean
+       public LocaleResolver localeResolver() {
+           return new MyLocaleResolver();
+       }
+   }
+   ```
+
+#### 登录
+
+1. 重复提交表单问题，重定向的使用
+
+   ```java
+   @PostMapping("/user/login")
+   public String login(@RequestParam String username, @RequestParam String password, Map<String, String> map) {
+       if (!username.isEmpty() && "123456".equals(password)) {
+           // 当前 url 还是 /user/login，刷新页面会重复提交表单，应该使用重定向跳转页面
+           return "main";
+       } else {
+           map.put("login_msg", "用户名密码错误");
+           return "login";
+       }
+   }
+   ```
+
+   ```java
+   @PostMapping("/user/login")
+   public String login(@RequestParam String username, @RequestParam String password, Map<String, String> map) {
+       if (!username.isEmpty() && "123456".equals(password)) {
+           return "redirect:/main";
+       } else {
+           map.put("login_msg", "用户名密码错误");
+           return "login";
+       }
+   }
+   ```
+
+##### 拦截器进行登录检查
+
+1. 编写拦截器代码，已登录则放行请求，未登录则返回登录页面
+
+   ```java
+   public class LoginHandlerInterceptor implements HandlerInterceptor {
+   
+       @Override
+       public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+           Object user = request.getSession().getAttribute(SessionConstant.login_user);
+           if (user == null) {
+               // 未登录，返回登录页
+               request.setAttribute(LoginConstant.login_msg, "没有权限，请先登录");
+               request.getRequestDispatcher("/login").forward(request, response);
+               return false;
+           } else {
+               return true;
+           }
+       }
+   
+       @Override
+       public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
+   
+       }
+   
+       @Override
+       public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+   
+       }
+   }
+   ```
+
+2. 将已登录用户名放入 session 中
+
+   session.setAttribute(SessionConstant.login_user, username);
+
+   ```java
+   @PostMapping("/user/login")
+   public String login(@RequestParam String username, @RequestParam String password, Map<String, String> map,
+                       HttpSession session) {
+       if (!username.isEmpty() && "123456".equals(password)) {
+           session.setAttribute(SessionConstant.login_user, username);
+           return "redirect:/main";
+       } else {
+           map.put(LoginConstant.login_msg, "用户名密码错误");
+           return "login";
+       }
+   }
+   ```
+
+3. 注册拦截器到容器中
+
+   ```java
+   // 添加拦截器
+   @Override
+   public void addInterceptors(InterceptorRegistry registry) {
+       registry.addInterceptor(new LoginHandlerInterceptor()).addPathPatterns("/**")
+               .excludePathPatterns("/login", "/", "index", "index.html", "/user/login");
+   }
    ```
 
 ------
@@ -615,6 +1007,18 @@ public UserService(@Qualifier("userRepoImpl2") UserRepo userRepo) {
     this.userRepo = userRepo;
 }
 ```
+
+#### @Aspect
+
+声明一个切面
+
+#### @Order
+
+指定切面的优先级，值越小，优先级越高
+
+#### @Pointcut
+
+声明切点表达式
 
 
 
