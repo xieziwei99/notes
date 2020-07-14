@@ -95,7 +95,7 @@ public static <K, V extends Comparable<V>> K[] getKeys(Map<K, V> map, V value) {
 
 ### Java 反射机制
 
-#### 类对象
+#### Class 类对象
 
 - 概念：所有的类，都存在一个类对象，这个类对象用于提供类本身的信息，比如有几种构造方法， 有多少属性，有哪些普通方法。
 - 获取类对象：（假如在 hero 包下有一个 Hero 类）
@@ -103,6 +103,111 @@ public static <K, V extends Comparable<V>> K[] getKeys(Map<K, V> map, V value) {
   2. `Hero.class;`
   3. `new Hero().getClass();`
 - 若 Hero 类有静态初始化块，那么获取类对象时，会执行静态初始化块的代码，且只执行一次，也就是说每个类有且仅有一个类对象。
+
+```java
+package 反射;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
+/**
+ * @author xieziwei99
+ * 2020-07-10
+ */
+public class Demo {
+
+    public static void main(String[] args) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchFieldException {
+        Class<Person> personClass = Person.class;
+        /*
+        getConstructor:
+            1. 只得到 public
+         */
+        Constructor<Person> constructor = personClass.getConstructor(String.class, int.class);
+        Person san = constructor.newInstance("san", 18);
+        System.out.println(san);
+
+        Field age = personClass.getDeclaredField("age");
+        age.set(san, 20);
+        System.out.println(san);
+
+        Method sayHello = personClass.getDeclaredMethod("sayHello");
+        sayHello.invoke(san);
+        System.out.println("========================");
+
+        // 使用反射调用私有的构造器、成员变量、方法
+        Constructor<Person> constructor1 = personClass.getDeclaredConstructor(String.class);
+        constructor1.setAccessible(true);
+        Person si = constructor1.newInstance("si");
+        System.out.println(si);
+
+        Field name = personClass.getDeclaredField("name");
+        name.setAccessible(true);
+        name.set(si, "LiSi");
+        System.out.println(si);
+
+        Method say = personClass.getDeclaredMethod("say", String.class);
+        say.setAccessible(true);
+        String hello = (String) say.invoke(si, "hello");
+        System.out.println(hello);
+    }
+}
+
+class Person {
+    public int age;
+    private String name;
+
+    public Person() {
+    }
+
+    private Person(String name) {
+        this.name = name;
+    }
+
+    public Person(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    @Override
+    public String toString() {
+        return "Person{" +
+                "name='" + name + '\'' +
+                ", age=" + age +
+                '}';
+    }
+
+    public void sayHello() {
+        System.out.println("Hello, my name is " + name);
+    }
+
+    private String say(String text) {
+        System.out.println(name + " says: " + text);
+        return text;
+    }
+}
+```
+
+#### ClassLoader 类加载器
+
+![image-20200712164708120](images/image-20200712164708120.png)
 
 
 
@@ -181,6 +286,99 @@ public static void main(String[] args) throws IOException {
 public static void writeStringToFile(String fileName, String msg) throws IOException {
     try (FileWriter fileWriter = new FileWriter(fileName)) {
         fileWriter.write(msg);
+    }
+}
+```
+
+#### 对象流 & 序列化机制
+
+序列化
+    1. 实现 Serializable 接口的类必须提供 serialVersionUID
+        - 没有提供 serialVersionUID 的类也会根据类的成员变量自动生成
+        - 所以不提供会存在一个问题：类的成员变量发生修改后，serialVersionUID 就变了，之前序列化过的对象无法再被反序列化
+      2. 可序列化的类要求其成员变量也都可以序列化
+
+在未提供 serialVersionUID 的前提下修改类的定义，反序列化出错：
+
+> java.io.InvalidClassException: 文件IO.Person; local class incompatible: stream classdesc serialVersionUID = 20171017, local class serialVersionUID = -2860299281169574019
+
+在提供 serialVersionUID 的前提下修改类的定义，如果是增加了成员变量，则反序列化时该成员变量为默认值，如果是删除了成员变量，则反序列化时没有该成员变量的值，其他正常。
+
+```java
+package 文件IO;
+
+import java.io.*;
+
+/**
+ * @author xieziwei99
+ * 2020-07-08
+ */
+public class 对象流使用 {
+
+    public static void main(String[] args) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("data.dat"))) {
+            oos.writeObject(new Person("san", 18, new Pet("hong", 3)));
+            oos.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream("data.dat"))) {
+            Person o = (Person) ois.readObject();
+            System.out.println(o);
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+}
+/*
+序列化
+    1. 实现 Serializable 接口的类必须提供 serialVersionUID
+        - 没有提供 serialVersionUID 的类也会根据类的成员变量自动生成
+        - 所以不提供会存在一个问题：类的成员变量发生修改后，serialVersionUID 就变了，
+          之前序列化过的对象无法再被反序列化
+    2. 可序列化的类要求其成员变量也都可以序列化
+ */
+class Person implements Serializable {
+    public static final long serialVersionUID = 20171017L;
+
+    public String name;
+    public int age;
+    public Pet pet;
+
+    public Person(String name, int age, Pet pet) {
+        this.name = name;
+        this.age = age;
+        this.pet = pet;
+    }
+
+    @Override
+    public String toString() {
+        return "Person{" +
+                "name='" + name + '\'' +
+                ", age=" + age +
+                ", pet=" + pet +
+                '}';
+    }
+}
+
+class Pet implements Serializable {
+    public static final long serialVersionUID = 20171016L;
+
+    public String name;
+    public int age;
+
+    public Pet(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    @Override
+    public String toString() {
+        return "Pet{" +
+                "name='" + name + '\'' +
+                ", age=" + age +
+                '}';
     }
 }
 ```
@@ -303,6 +501,76 @@ class LocalDateUtil {
     }
 }
 ```
+
+### 枚举
+
+枚举基本使用
+
+```java
+package 枚举;
+
+enum Season {
+    春天, 夏天, 秋天, 冬天
+}
+
+public class Demo {
+
+    public static void main(String[] args) {
+        System.out.println(Season.春天);
+        System.out.println(Season.夏天);
+        System.out.println(Season.秋天);
+        System.out.println(Season.冬天);
+        System.out.println(Season.class.getSuperclass());   // class java.lang.Enum
+
+        /*
+        春天 春天 0
+        夏天 夏天 1
+        秋天 秋天 2
+        冬天 冬天 3
+         */
+        for (Season season : Season.values()) {
+            System.out.print(season + " ");
+            System.out.print(season.name() + " ");
+            System.out.print(season.ordinal() + " ");
+            System.out.println();
+        }
+    }
+}
+```
+
+定义枚举类并实现接口，并让枚举属性分别实现抽象方法
+
+![image-20200703120503758](images/image-20200703120503758.png)
+
+
+
+### 注解
+
+#### 类型注解
+
+@Target({TYPE_PARAMETER, TYPE_USE})
+
+![image-20200704200249754](images/image-20200704200249754.png)
+
+
+
+### 字符集与编码
+
+例如，Unicode 字符集，UTF-8 编码
+
+![image-20200705134822505](images/image-20200705134822505.png)
+
+![image-20200705135356197](images/image-20200705135356197.png)
+
+### 类的加载过程
+
+![image-20200711172310360](images/image-20200711172310360.png)
+
+![image-20200711172357441](images/image-20200711172357441.png)
+
+
+
+
 
 ------
 
@@ -1019,6 +1287,147 @@ public UserService(@Qualifier("userRepoImpl2") UserRepo userRepo) {
 #### @Pointcut
 
 声明切点表达式
+
+
+
+## SpringMVC
+
+### 注解
+
+#### @RequestMapping
+
+请求参数和请求头
+
+![image-20200706120658680](images/image-20200706120658680.png)
+
+通配符
+
+![image-20200706121000025](images/image-20200706121000025.png)
+
+#### @PathVariable
+
+#### @RequestParam
+
+#### @RequestHeader
+
+获取请求头信息
+
+#### @CookieValue
+
+获取 Cookie 信息
+
+![image-20200708122654322](images/image-20200708122654322.png)
+
+#### @SessionAttributes
+
+将指定的 key 放入 RequestScope 的同时，放入 SessionScope 中
+
+![image-20200710105758295](images/image-20200710105758295.png)
+
+#### @ModelAttribute
+
+```java
+@ModelAttribute
+public void 被ModelAttribute标记在所有方法前运行(
+        @RequestParam(value = "id", required = false) Integer id, Model model) {
+    System.out.println("enter 被ModelAttribute标记在所有方法前运行()...");
+    if (id != null) {
+        Person person = new Person();
+        person.setId(id);
+        person.setName("Queen");
+        person.setIdCardNumber("433325200001010001");
+        model.addAttribute("person", person);
+    }
+}
+
+@RequestMapping("/testModelAttribute")
+public String testModelAttribute(@ModelAttribute("person") Person person) {
+    System.out.println("testModelAttribute: " + person);
+    return "success";
+}
+```
+
+
+
+### HiddenHttpMethodFilter
+
+![image-20200707135109810](images/image-20200707135109810.png)
+
+浏览器 form 表单发送 put & delete 请求的方式
+
+```jsp
+<a href="product/1">get product</a>
+<form action="product" method="post">
+  <button type="submit">add product</button>
+</form>
+<form action="product/2" method="post">
+  <input type="hidden" name="_method" value="PUT" />		<!-- 重点是这一行 -->
+  <button type="submit">update product</button>
+</form>
+<form action="product/3" method="post">
+  <input type="hidden" name="_method" value="DELETE" />
+  <button type="submit">delete product</button>
+</form>
+```
+
+需要在 web.xml 中配置过滤器 HiddenHttpMethodFilter
+
+```xml
+<!--  配置 HiddenHttpMethodFilter，使得可以将 POST 请求转换成 DELETE or PUT 请求-->
+    <filter>
+        <filter-name>HiddenHttpMethodFilter</filter-name>
+        <filter-class>org.springframework.web.filter.HiddenHttpMethodFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>HiddenHttpMethodFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+```
+
+下面就可以处理 put 和 delete 请求了。
+
+>  Tomcat 8 及以上也许会有问题：[HTTP 405 的错误提示：消息 JSP 只允许 GET、POST 或 HEAD。Jasper 还允许 OPTIONS 的解决方法](https://www.cnblogs.com/lemon-coke-pudding/p/12727981.html)
+
+### 使用 pojo 作为表单提交参数
+
+提交表单
+
+```jsp
+<form action="testPojo" method="post">
+    <div>
+        <label for="product_name">
+            product name:
+            <input type="text" name="name" id="product_name">
+        </label>
+    </div>
+    <div>
+        <label for="product_price">
+            product price:
+            <input type="text" name="price" id="product_price">
+        </label>
+    </div>
+    <div>
+        <label for="category_name">
+            category name:
+            <input type="text" name="category.name" id="category_name">		
+            注意 name 属性，应该与定义的 pojo 一致，且允许级联
+        </label>
+    </div>
+    <div>
+        <button>submit</button>
+    </div>
+</form>
+```
+
+controller 方法，接受参数
+
+```java
+@RequestMapping("/testPojo")
+public String testPojo(Product product) {		// 此处参数没有用注解修饰，理由还不知道
+    System.out.println(product);
+    return "success";
+}
+```
 
 
 
