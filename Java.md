@@ -570,6 +570,12 @@ public class Demo {
 
 
 
+### 概念
+
+#### native 关键字
+
+native 关键字说明其修饰的方法是一个原生态方法，方法对应的实现不是在当前文件，而是在用其他语言（如C和C++）实现的文件中。
+
 
 
 ------
@@ -1292,6 +1298,91 @@ public UserService(@Qualifier("userRepoImpl2") UserRepo userRepo) {
 
 ## SpringMVC
 
+### 配置
+
+#### 创建 springmvc 应用的四步配置
+
+##### 1、配置 SpringMVC 的 DispatcherServlet
+
+```xml
+<!-- web.xml 文件 -->
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+	xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+	id="WebApp_ID" version="4.0">
+
+	<servlet>
+		<servlet-name>dispatcherServlet</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		<init-param>
+			<param-name>contextConfigLocation</param-name>
+			<param-value>classpath:springmvc.xml</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	<!-- 映射全部路径请求到 dispatcherServlet -->
+	<servlet-mapping>
+	   <servlet-name>dispatcherServlet</servlet-name>
+	   <url-pattern>/</url-pattern>
+	</servlet-mapping>
+</web-app>
+```
+
+##### 2、配置 HiddenHttpMethodFilter，使得 POST 请求可以转换成 DELETE 和 PUT 请求
+
+```xml
+<!-- web.xml 文件 -->
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+	xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+	id="WebApp_ID" version="4.0">
+	
+	<filter>
+	   <filter-name>hiddenHttpMethodFilter</filter-name>
+	   <filter-class>org.springframework.web.filter.HiddenHttpMethodFilter</filter-class>
+	</filter>
+	<filter-mapping>
+	   <filter-name>hiddenHttpMethodFilter</filter-name>
+	   <url-pattern>/*</url-pattern>
+	</filter-mapping>
+</web-app>
+```
+
+##### 3、配置自动扫描的包
+
+```xml
+<!-- springmvc.xml 文件 -->
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+    
+    <context:component-scan base-package="com.xzw.springmvc.crud"></context:component-scan>
+</beans>
+```
+
+##### 4、配置视图解析器
+
+```xml
+<!-- springmvc.xml 文件 -->
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+    
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/WEB-INF/views/"></property>
+        <property name="suffix" value=".jsp"></property>    
+    </bean>
+</beans>
+```
+
+
+
 ### 注解
 
 #### @RequestMapping
@@ -1426,6 +1517,28 @@ controller 方法，接受参数
 public String testPojo(Product product) {		// 此处参数没有用注解修饰，理由还不知道
     System.out.println(product);
     return "success";
+}
+```
+
+### mvc:view-controller 标签
+
+![image-20200726194602745](images/image-20200726194602745.png)
+
+
+
+### 转发和重定向
+
+```java
+/*
+转发和重定向
+    - 转发：服务器行为，地址栏的请求 url 不会改变，仍为 /testRedirect
+    - 重定向：客户端行为，重定向后，浏览器显示新的 url 地址。服务端回应 302 响应码，客户浏览器发现是302响应，
+        则自动再发送一个新的http请求，请求url是新的 location 地址，如下 /index.jsp ，重定向行为是浏览器做了至少两次的访问请求。
+ */
+@RequestMapping("/testRedirect")
+public String testRedirect() {
+    System.out.println("testRedirect");
+    return "redirect:/index.jsp";
 }
 ```
 
