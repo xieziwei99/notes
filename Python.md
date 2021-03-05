@@ -506,3 +506,74 @@ admin.site.register(Emp, EmpAdmin)
 <QuerySet [<Emp: 张三丰>]>
 ```
 
+
+
+## scrapy
+
+### 安装
+
+```sh
+# 需要前置安装 pywin32 和 twisted
+pip install pywin32
+pip install twisted
+pip install scrapy
+```
+
+### 使用
+
+scrapy startproject dataspider
+
+scrapy crawl spiderscript
+
+
+
+## numpy
+
+1. numpy 中的切片是浅拷贝
+
+   ```python
+   arr = np.arange(1, 21).reshape(4, 5)
+   print(arr)
+   print(arr[1][1])
+   arr[2][2] = 100
+   print(arr)
+   
+   arr2 = arr[0:1, 0:1]  # numpy 中的切片是浅拷贝
+   print(arr2)
+   arr2[0][0] = 1000
+   print(arr)
+   
+   [[ 1  2  3  4  5]
+    [ 6  7  8  9 10]
+    [11 12 13 14 15]
+    [16 17 18 19 20]]
+   7
+   [[  1   2   3   4   5]
+    [  6   7   8   9  10]
+    [ 11  12 100  14  15]
+    [ 16  17  18  19  20]]
+   [[1]]
+   [[1000    2    3    4    5]
+    [   6    7    8    9   10]
+    [  11   12  100   14   15]
+    [  16   17   18   19   20]]
+   ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

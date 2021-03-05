@@ -576,7 +576,61 @@ public class Demo {
 
 native 关键字说明其修饰的方法是一个原生态方法，方法对应的实现不是在当前文件，而是在用其他语言（如C和C++）实现的文件中。
 
+#### Integer 缓存池
 
+Integer.valueOf()的实现
+
+```Java
+public static Integer valueOf(int i) {
+    if (i >= IntegerCache.low && i <= IntegerCache.high)
+        return IntegerCache.cache[i + (-IntegerCache.low)];
+    return new Integer(i);
+}
+```
+
+IntegerCache 的实现
+
+```java
+private static class IntegerCache {
+    static final int low = -128;
+    static final int high;
+    static final Integer cache[];
+
+    static {
+        // high value may be configured by property
+        int h = 127;
+        String integerCacheHighPropValue =
+            sun.misc.VM.getSavedProperty("java.lang.Integer.IntegerCache.high");
+        if (integerCacheHighPropValue != null) {
+            try {
+                int i = parseInt(integerCacheHighPropValue);
+                i = Math.max(i, 127);
+                // Maximum array size is Integer.MAX_VALUE
+                h = Math.min(i, Integer.MAX_VALUE - (-low) -1);
+                // --- 此处保证 h 不超过上界，即当 h = MAX_VALUE 时，-128 ~ MAX_VALUE就装不下了，---
+                // --- 所以 h 的最大值要减去 -128 ~ 0 的位置 ---
+            } catch( NumberFormatException nfe) {
+                // If the property cannot be parsed into an int, ignore it.
+            }
+        }
+        high = h;
+
+        cache = new Integer[(high - low) + 1];
+        int j = low;
+        for(int k = 0; k < cache.length; k++)
+            cache[k] = new Integer(j++);
+
+        // range [-128, 127] must be interned (JLS7 5.1.7)
+        assert IntegerCache.high >= 127;
+    }
+
+    private IntegerCache() {}
+}
+```
+
+在 jdk 1.8 所有的数值类缓冲池中，Integer 的缓冲池 IntegerCache 很特殊，这个缓冲池的下界是 - 128，上界默认是 127，但是这个上界是可调的，在启动 jvm 的时候，通过 -XX:AutoBoxCacheMax=<size> 来指定这个缓冲池的大小，该选项在 JVM 初始化的时候会设定一个名为 java.lang.IntegerCache.high 系统属性，然后 IntegerCache 初始化的时候就会读取该系统属性来决定上界。
+
+[实验](./blogs/java/Integer缓存池.md)
 
 ------
 
