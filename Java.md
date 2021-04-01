@@ -93,6 +93,36 @@ public static <K, V extends Comparable<V>> K[] getKeys(Map<K, V> map, V value) {
   - 正常退出时系统提示：Process finished with exit code 0
   - 异常退出时系统提示：Process finished with exit code -1
 
+
+
+#### 编程习惯
+
+1. wait() 应该总在循环中出现
+
+   <img src="images/image-20210306141029097.png" alt="image-20210306141029097" style="zoom: 67%;" />
+
+   线程也可以在不被通知、中断或超时的情况下被唤醒，这就是所谓的伪唤醒。虽然这种情况在实践中很少发生，但应用程序必须通过测试应该导致线程被唤醒的条件来防止这种情况发生，如果条件不满足，则继续等待。换句话说，等待应该总是在循环中发生，例如
+
+   ```java
+   synchronized (this) {
+       while (this.money - delta < 0) {
+           try {
+               System.out.println("\t\t没钱了，等一等");
+               this.wait(3000);
+           } catch (InterruptedException e) {
+               e.printStackTrace();
+           }
+       }
+       System.out.println("\t\t当前 " + this.money);
+       this.money -= delta;
+       System.out.println("\t\t取出 " + delta + " 后金额为 " + this.money);
+   }
+   ```
+
+2. 
+
+
+
 ### Java 反射机制
 
 #### Class 类对象
@@ -227,13 +257,117 @@ ret.merge(i, 1, Integer::sum);	// 与上面等价
 
 
 
-### Arrays 方法
+### Collectors
+
+#### groupingBy 方法
+
+```java
+package aloha;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+/**
+ * @author xzw
+ * 2021-03-05
+ */
+public class Aloha {
+
+    public static void main(String[] args) {
+        List<Course> list = new ArrayList<>();
+        list.add(new Course("张三", "语文", 60));
+        list.add(new Course("张三", "数学", 70));
+        list.add(new Course("张三", "英语", 80));
+        list.add(new Course("李四", "语文", 20));
+        list.add(new Course("李四", "数学", 30));
+        list.add(new Course("李四", "英语", 40));
+
+        // 按照姓名进行分组，将姓名作为 key ，整个元组作为 value 的一个元素
+        Map<String, List<Course>> collect = list.stream().collect(Collectors.groupingBy(Course::getStudentName));
+        System.out.println(collect);
+        // {李四=[(李四, 语文, 20), (李四, 数学, 30), (李四, 英语, 40)], 张三=[(张三, 语文, 60), (张三, 数学, 70), (张三, 英语, 80)]}
+
+        // 按照姓名进行分组，将姓名作为 key ，统计元组的个数作为 value
+        Map<String, Long> collect1 = list.stream().collect(Collectors.groupingBy(Course::getStudentName, Collectors.counting()));
+        System.out.println(collect1);
+        // {李四=3, 张三=3}
+
+        Map<String, Double> collect2 = list.stream().collect(Collectors.groupingBy(Course::getStudentName, Collectors.averagingInt(Course::getScore)));
+        System.out.println(collect2);
+        // {李四=30.0, 张三=70.0}
+
+        Map<String, Integer> collect3 = list.stream().collect(Collectors.groupingBy(Course::getStudentName, Collectors.summingInt(Course::getScore)));
+        System.out.println(collect3);
+        // {李四=90, 张三=210}
+
+        Map<String, List<Integer>> collect4 = list.stream().collect(Collectors.groupingBy(Course::getStudentName, Collectors.mapping(Course::getScore,
+                Collectors.toList())));
+        System.out.println(collect4);
+        // {李四=[20, 30, 40], 张三=[60, 70, 80]}
+
+        Map<String, String> collect5 = list.stream().collect(Collectors.groupingBy(Course::getStudentName,
+                Collectors.mapping(course -> "(" + course.getCourseName() + ", " + course.getScore() + ")",
+                        Collectors.joining(", ", "所有课程成绩：[", "]"))));
+        System.out.println(collect5);
+        // {李四=所有课程成绩：[(语文, 20), (数学, 30), (英语, 40)], 张三=所有课程成绩：[(语文, 60), (数学, 70), (英语, 80)]}
+    }
+}
+
+class Course {
+    String studentName;
+    String courseName;
+    int score;
+
+    public Course(String studentName, String courseName, int score) {
+        this.studentName = studentName;
+        this.courseName = courseName;
+        this.score = score;
+    }
+
+    public String getStudentName() {
+        return studentName;
+    }
+
+    public int getScore() {
+        return score;
+    }
+
+    public String getCourseName() {
+        return courseName;
+    }
+
+    @Override
+    public String toString() {
+        return "(" + studentName + ", " + courseName + ", " + score + ")";
+    }
+}
+```
+
+
+
+### 数组操作
 
 #### Arrays.toString()
 
 ```java
 // 输出数组a
 System.out.println(Arrays.toString(a));
+```
+
+#### System.arraycopy(...)
+
+```java
+// 用于复制数组
+// length 的指定不能导致 src 或 dest 超出长度，否则抛出 IndexOutOfBoundsException
+public static native void arraycopy(Object src,  int  srcPos, Object dest, int destPos, int length);
+
+// 当 src 和 dest 是同一个数组时，会先将其拷贝到一个临时数组，再拷贝回来
+int[] a = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+//noinspection SuspiciousSystemArraycopy
+System.arraycopy(a, 0, a, 1, 3);
+System.out.println(Arrays.toString(a));     // [1, 1, 2, 3, 5, 6, 7, 8, 9]
 ```
 
 
@@ -631,6 +765,98 @@ private static class IntegerCache {
 在 jdk 1.8 所有的数值类缓冲池中，Integer 的缓冲池 IntegerCache 很特殊，这个缓冲池的下界是 - 128，上界默认是 127，但是这个上界是可调的，在启动 jvm 的时候，通过 -XX:AutoBoxCacheMax=<size> 来指定这个缓冲池的大小，该选项在 JVM 初始化的时候会设定一个名为 java.lang.IntegerCache.high 系统属性，然后 IntegerCache 初始化的时候就会读取该系统属性来决定上界。
 
 [实验](./blogs/java/Integer缓存池.md)
+
+
+
+#### sleep 方法
+
+Thread.sleep(millisec) 方法会休眠当前正在执行的线程，millisec 单位为毫秒。
+
+sleep() 可能会抛出 InterruptedException，**因为异常不能跨线程传播回 main() 中，因此必须在本地进行处理**。线程中抛出的其它异常也同样需要在本地进行处理。
+
+```java
+public void run() {
+    try {
+        Thread.sleep(3000);
+    } catch (InterruptedException e) {
+        e.printStackTrace();
+    }
+}
+```
+
+
+
+#### 线程的状态
+
+这里的线程状态特指 Java 虚拟机的线程状态，不能反映线程在特定操作系统下的状态。
+
+1. NEW 新建
+
+2. RUNABLE 可运行状态
+
+   正在 Java 虚拟机中运行。但是**在操作系统层面，它可能处于运行状态，也可能等待资源调度**（例如处理器资源），资源调度完成就进入运行状态。所以该状态的可运行是指可以被运行，具体有没有运行要看底层操作系统的资源调度。
+
+3. BLOCKED 阻塞
+
+   请求获取 monitor **lock** 从而进入 synchronized 函数或者代码块，但是其它线程已经占用了该 monitor lock，所以出于阻塞状态
+
+4. WAITING 无限期等待
+
+   通过调用 Object.wait() 等方法进入。
+
+   等待是主动的，不是因为没有锁而被阻塞。
+
+   等待状态需要其它线程显式地唤醒。
+
+5. TIMED_WAITING 限期等待
+
+   无需等待其它线程显式地唤醒，在一定时间之后会被系统自动唤醒。
+
+   例如 Object.wait(Timeout)、 Thread.sleep()
+
+6. TERMINATED 结束
+
+
+
+#### Semaphore
+
+```english
+However, no actual permit objects are used; the Semaphore just keeps a count of the number available and acts accordingly.
+
+Note that no synchronization lock is held when acquire is called as that would prevent an item from being returned to the pool. 
+The semaphore encapsulates the synchronization needed to restrict access to the pool, separately from any synchronization needed to maintain the consistency of the pool itself.
+
+that the "lock" can be released by a thread other than the owner
+
+Memory consistency effects: 什么东西好复杂的感觉
+```
+
+
+
+### 负数参与的按位与
+
+```java
+// 负数 & 正数
+// 1000 0001
+int a = -1;
+// 0000 0010
+int b = Integer.MAX_VALUE;
+// 1111 1111   （a 取补码）
+// 0111 1111   （做与运算）
+// 0111 1111   = MAX_VALUE
+System.out.println(a & b);      // 2147483647
+
+// 负数 & 负数
+// 1000 0001
+int a = -1;
+// 1000 0010
+int b = -2;
+// 1111 1111   （a 取补码）
+// 1111 1110   （b 取补码 做与运算）
+// 1111 1110    结果为负，再次取补码
+// 1000 0010    = -2
+System.out.println(a & b);      // -2
+```
 
 ------
 
@@ -1682,3 +1908,10 @@ public class ReturnVO<T> {
 }
 ```
 
+
+
+## 什么额外的算法？
+
+### 工作窃取算法
+
+https://blog.csdn.net/pange1991/article/details/80944797
