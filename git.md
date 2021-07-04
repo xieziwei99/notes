@@ -42,3 +42,30 @@
 git rm -r --cached .\superlists\__pycache__		# -r表示递归，--cached表示不删除本地文件
 ```
 
+
+
+### 将没有 add 的修改撤销
+
+```sh
+git checkout -- a.txt
+```
+
+
+
+### 如果已经 add 但没有 commit
+
+```sh
+git log		# 查看版本号
+
+git reset cc58	# 重置到某个版本号，此时 add 的文件将回到没有 add 的状态
+# 或者使用 git reset --hard cc58，此时会重置到某个版本号，并丢掉所有的更改
+
+git checkout -- a.txt
+```
+
+
+
+### git stage
+
+等同于 git add
+

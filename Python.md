@@ -561,6 +561,24 @@ scrapy crawl spiderscript
 
 
 
+### 函数
+
+#### reshape
+
+```python
+# -1 表示缺省值，意味着行数需要 numpy 计算，列数规定为 1
+def main():
+    a = np.array([1, 2, 3, 4])
+    a = a.reshape((-1, 1))
+    print(a)
+    '''
+    [[1]
+     [2]
+     [3]
+     [4]]
+    '''
+```
+
 
 
 
