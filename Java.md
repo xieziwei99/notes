@@ -858,6 +858,14 @@ int b = -2;
 System.out.println(a & b);      // -2
 ```
 
+
+
+### 找不到或者无法加载主类
+
+- 检查 output path 是否正确
+
+
+
 ------
 
 ## Java 11
@@ -1915,3 +1923,16 @@ public class ReturnVO<T> {
 ### 工作窃取算法
 
 https://blog.csdn.net/pange1991/article/details/80944797
+
+
+
+## 设计模式
+
+### 适配器模式
+
+1. 比如说
+
+    ![image-20210717215306584](Java.assets/image-20210717215306584.png)
+
+2. 
+
