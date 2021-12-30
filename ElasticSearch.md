@@ -149,4 +149,22 @@ GET /city/_doc/_search
     }
   }
 }
+
+# exists
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "exists": {
+            "field": "slideRecoLive"
+          }
+        }
+      ]
+    }
+  },
+  "sort": {
+    "time": "desc"
+  }
+}
 ```

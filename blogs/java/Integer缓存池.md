@@ -46,7 +46,7 @@ System.out.println(integer3 == integer4);    // false
 
 这时我们打开 IDEA 中项目配置的地方，找到 vm options，配置如下参数：`-XX:AutoBoxCacheMax=140`
 
-<img src="images/image-20210305141110414.png" alt="image-20210305141110414" style="zoom: 33%;" />
+<img src="Integer缓存池.asserts/image-20210305141110414.png" alt="image-20210305141110414" style="zoom: 33%;" />
 
 再次运行上述程序
 

@@ -69,3 +69,11 @@ git checkout -- a.txt
 
 等同于 git add
 
+
+
+### 删除远程分支
+
+```sh
+git push origin --delete feature_modify_no_status
+```
+

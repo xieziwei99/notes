@@ -833,6 +833,20 @@ Memory consistency effects: 什么东西好复杂的感觉
 
 
 
+#### lambda 表达式中的变量必须是 final
+
+<img src="Java.assets/image-20210810162628145.png" alt="image-20210810162628145" style="zoom:50%;" />
+
+如果更改 list 所引用的对象，就会导致错误
+
+
+
+级联表达式和柯里化
+
+<img src="Java.assets/image-20210810163316806.png" alt="image-20210810163316806" style="zoom:50%;" />
+
+
+
 ### 负数参与的按位与
 
 ```java
@@ -916,6 +930,68 @@ public static void main(String[] args) {
         .thenApply(HttpResponse::body)
         .thenAccept(System.out::println)
         .join();
+}
+```
+
+
+
+### Flow API
+
+publisher 和 subscriber 示例
+
+```java
+public class Aloha {
+
+    public static void main(String[] args) {
+        try (SubmissionPublisher<String> publisher = new SubmissionPublisher<>()) {
+            Subscriber<String> subscriber = new MySubscriber<>();
+            publisher.subscribe(subscriber);
+            publisher.submit("ni hao");
+            publisher.submit("ni hao a");
+            publisher.submit("ni hao aa");
+
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+
+class MySubscriber<T> implements Subscriber<T> {
+
+    private Subscription subscription;
+
+
+    @Override
+    public void onSubscribe(Subscription subscription) {
+        this.subscription = subscription;
+        this.subscription.request(1);
+    }
+
+    @Override
+    public void onNext(T t) {
+        System.out.println(t);
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        subscription.request(1);
+    }
+
+    @Override
+    public void onError(Throwable throwable) {
+        throwable.printStackTrace();
+        subscription.cancel();
+    }
+
+    @Override
+    public void onComplete() {
+        System.out.println("发布者已关闭");
+
+    }
 }
 ```
 

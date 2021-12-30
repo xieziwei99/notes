@@ -4,7 +4,9 @@
 
 ### 常规
 
-##### 时间戳
+1. int(11) 字节数：int 占 4 个字节，32 位。bigint 占 8 个字节。11 表示的意思是显示 11 个数字。当然超出 11 个数字的也能显示。
+
+#### 时间戳
 
 ```mysql
 now()	// 当前时间
@@ -12,11 +14,11 @@ date_add(now(), interval 1 day)	// 当前时间后一天
 insert into buginfo values (2, date_add(now(), interval 1 day), 60.0, 60.0, false, false, 10, "xzw", now(), 0, 0);
 ```
 
-##### 占位符
+#### 占位符
 
 - 原生 SQL 语句占位符是 `?`，且是基1的
 
-##### 导入 MySQL 文件提示：ERROR: ASCII '\0' appeared in the statement
+#### 导入 MySQL 文件提示：ERROR: ASCII '\0' appeared in the statement
 
 - 错误：ERROR: ASCII '\0' appeared in the statement, but this is not allowed unless option --binary-mode is enabled and mysql is run in non-interactive mode. Set --binary-mode to 1 if ASCII '\0' is expected. Query: '?
 - 原因：.sql 文件是在 powershell 中导出的（坑爹啊）
