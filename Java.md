@@ -880,6 +880,249 @@ System.out.println(a & b);      // -2
 
 
 
+### DelayQueue
+
+```java
+package aloha;
+
+import java.util.concurrent.DelayQueue;
+import java.util.concurrent.Delayed;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
+public class Aloha {
+
+    public static void main(String[] args) {
+        MySystem system = new MySystem();
+        Buyer buyer1 = new Buyer("z3");
+        Buyer buyer2 = new Buyer("l4");
+        AtomicReference<Order> order1 = new AtomicReference<>();
+        AtomicReference<Order> order2 = new AtomicReference<>();
+        AtomicReference<Order> order3 = new AtomicReference<>();
+        new Thread(() -> {
+            try {
+                order1.set(system.createOrder(buyer1, 1));
+                Thread.sleep(1000);
+                order2.set(system.createOrder(buyer2, 2));
+                Thread.sleep(2000);
+                order3.set(system.createOrder(buyer1, 3));
+                Thread.sleep(2000);
+                buyer1.payAnOrder(order1.get());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }).start();
+
+        new Thread(() -> {
+            while (true) {
+                System.out.println(order1.get());
+                System.out.println(order2.get());
+                System.out.println(order3.get());
+                Order poll = system.DELAY_QUEUE.poll();
+                if (poll != null && !poll.isAlreadyPay()) {
+                    system.cancelOrder(poll);
+                }
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+}
+
+class Order implements Delayed {
+
+    private static final long TTL = TimeUnit.SECONDS.toMillis(10);
+
+    private int id;
+    private long createTime;
+    private boolean alreadyPay;
+    private boolean canceled;
+
+    public Order(int id) {
+        this.id = id;
+        this.createTime = System.currentTimeMillis();
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public long getCreateTime() {
+        return createTime;
+    }
+
+    public boolean isAlreadyPay() {
+        return alreadyPay;
+    }
+
+    public boolean isCanceled() {
+        return canceled;
+    }
+
+    public void pay() {
+        this.alreadyPay = true;
+    }
+
+    public void cancel() {
+        this.canceled = true;
+    }
+
+    @Override
+    public long getDelay(TimeUnit unit) {
+        return unit.convert(getCreateTime() + TTL - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    public int compareTo(Delayed o) {
+        long diff;
+        if (o instanceof Order) {
+            diff = this.getCreateTime() - ((Order) o).getCreateTime();
+        } else {
+            diff = this.getDelay(TimeUnit.MILLISECONDS) - o.getDelay(TimeUnit.MILLISECONDS);
+        }
+        return diff < 0 ? -1 : (diff == 0 ? 0 : 1);
+    }
+
+    @Override
+    public String toString() {
+        if (alreadyPay) {
+            return "订单已支付。ID: " + getId();
+        } else {
+            if (canceled) {
+                return "订单已取消。ID: " + getId();
+            } else {
+                return String.format("订单未支付。ID: %s, 即将超时: %s秒", getId(), getDelay(TimeUnit.SECONDS));
+            }
+        }
+    }
+}
+
+
+class Buyer {
+    private String name;
+
+    public Buyer(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void payAnOrder(Order order) {
+        String format = String.format("%s支付了订单。ID: %s", getName(), order.getId());
+        System.out.println(format);
+        order.pay();
+    }
+}
+
+class MySystem {
+
+    public DelayQueue<Order> DELAY_QUEUE = new DelayQueue<>();
+
+    public Order createOrder(Buyer buyer, int orderId) {
+        String format = String.format("%s创建了订单。ID: %s", buyer.getName(), orderId);
+        System.out.println(format);
+        Order order = new Order(orderId);
+        DELAY_QUEUE.put(order);
+        return order;
+    }
+
+    public void cancelOrder(Order order) {
+        String format = String.format("订单15min未支付，系统已自动取消。ID: %s", order.getId());
+        System.out.println(format);
+        order.cancel();
+    }
+}
+```
+
+```txt
+null
+null
+null
+z3创建了订单。ID: 1
+订单未支付。ID: 1, 即将超时: 9秒
+null
+null
+l4创建了订单。ID: 2
+订单未支付。ID: 1, 即将超时: 8秒
+订单未支付。ID: 2, 即将超时: 9秒
+null
+订单未支付。ID: 1, 即将超时: 7秒
+订单未支付。ID: 2, 即将超时: 8秒
+null
+z3创建了订单。ID: 3
+订单未支付。ID: 1, 即将超时: 6秒
+订单未支付。ID: 2, 即将超时: 7秒
+订单未支付。ID: 3, 即将超时: 9秒
+订单未支付。ID: 1, 即将超时: 5秒
+订单未支付。ID: 2, 即将超时: 6秒
+订单未支付。ID: 3, 即将超时: 8秒
+z3支付了订单。ID: 1
+订单已支付。ID: 1
+订单未支付。ID: 2, 即将超时: 5秒
+订单未支付。ID: 3, 即将超时: 7秒
+订单已支付。ID: 1
+订单未支付。ID: 2, 即将超时: 4秒
+订单未支付。ID: 3, 即将超时: 6秒
+订单已支付。ID: 1
+订单未支付。ID: 2, 即将超时: 2秒
+订单未支付。ID: 3, 即将超时: 5秒
+订单已支付。ID: 1
+订单未支付。ID: 2, 即将超时: 1秒
+订单未支付。ID: 3, 即将超时: 4秒
+订单已支付。ID: 1
+订单未支付。ID: 2, 即将超时: 0秒
+订单未支付。ID: 3, 即将超时: 2秒
+订单已支付。ID: 1
+订单未支付。ID: 2, 即将超时: 0秒
+订单未支付。ID: 3, 即将超时: 1秒
+订单15min未支付，系统已自动取消。ID: 2
+订单已支付。ID: 1
+订单已取消。ID: 2
+订单未支付。ID: 3, 即将超时: 0秒
+订单已支付。ID: 1
+订单已取消。ID: 2
+订单未支付。ID: 3, 即将超时: 0秒
+订单15min未支付，系统已自动取消。ID: 3
+订单已支付。ID: 1
+订单已取消。ID: 2
+订单已取消。ID: 3
+订单已支付。ID: 1
+订单已取消。ID: 2
+订单已取消。ID: 3
+
+Process finished with exit code 130 (interrupted by signal 2: SIGINT)
+```
+
+
+
+### 线程池
+
+[参考](https://javaguide.cn/java/concurrent/java%E7%BA%BF%E7%A8%8B%E6%B1%A0%E5%AD%A6%E4%B9%A0%E6%80%BB%E7%BB%93/#_3-1-threadpoolexecutor-%E7%B1%BB%E5%88%86%E6%9E%90)
+
+#### 核心参数
+
+```java
+public ThreadPoolExecutor(int corePoolSize,//线程池的核心线程数量
+                              int maximumPoolSize,//线程池的最大线程数
+                              long keepAliveTime,//当线程数大于核心线程数时，多余的空闲线程存活的最长时间
+                              TimeUnit unit,//时间单位
+                              BlockingQueue<Runnable> workQueue,//任务队列，用来储存等待执行任务的队列
+                              ThreadFactory threadFactory,//线程工厂，用来创建线程，一般默认即可
+                              RejectedExecutionHandler handler//拒绝策略，当提交的任务过多而不能及时处理时，我们可以定制策略来处理任务
+                               ) ;
+```
+
+
+
+
+
+
+
 ------
 
 ## Java 11
@@ -2012,3 +2255,14 @@ https://blog.csdn.net/pange1991/article/details/80944797
 
 2. 
 
+
+
+### 代理模式
+
+#### 动态代理
+
+##### jdk 动态代理
+
+基于接口的动态代理。不能为没有实现接口的类生成代理类，因为在设计上，jdk 生成的代理类会继承 Proxy 类，Proxy 类中开头 javadoc 如下
+
+> Proxy provides static methods for creating dynamic proxy classes and instances, and it is also the superclass of all dynamic proxy classes created by those methods.
